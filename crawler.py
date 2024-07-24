@@ -10,19 +10,19 @@ from functions import *
 
 # Search for news articles after given date.
 # Possible formats: YYYY, YYYY-MM, YYYY-MM-DD.
-AFTER = "" 
+AFTER = "2018-03-01" 
 
 # Search for news articles before given date.
 # Possible formats: YYYY, YYYY-MM, YYYY-MM-DD.
-BEFORE = "" 
+BEFORE = "2018-03-01" 
 
 # Search for news articles within given category.
-# Possible categories: 정치, 경제, 사회, 생활문화, 세계, IT/과학, 연예, 오피니언, TV.
-CATEGORY = ""
+# Possible categories: 정치, 경제, 사회, 생활문화, 세계, IT/과학, 오피니언, TV.
+CATEGORY = "오피니언"
 
 # Provide User-Agent that will appear in every request. (optional)
 # Example: "news-crawler/1.0".
-USER_AGENT = ""
+USER_AGENT = "Mozilla/5.0"
 
 news_urls = []
 article_urls = []
