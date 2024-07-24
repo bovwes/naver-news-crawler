@@ -16,7 +16,8 @@ Modify the following variables in the `crawler.py` to define the date range and 
 
 - `AFTER` and `BEFORE` should be in the format `YYYY-MM-DD`, `YYYY-MM`, or `YYYY`.
 - `CATEGORY` can be any of following available categories: `정치` (Politics), `경제` (Economy), `사회` (Society), `생활문화` (Culture), `세계` (World), `IT/과학` (Science), `오피니언` (Opinion), `TV` (TV)
-- `USER_AGENT` will be included in the header of ever request. No headers are included if left empty.
+- `USER_AGENT` will be included in the header of every request. No headers are included if left empty.
+- `NUM_THREADS` determines the number of concurrent workers that parse articles. A higher number will speed up the process.
 
 Then, run the script using the following command:
 

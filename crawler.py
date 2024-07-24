@@ -2,6 +2,7 @@ import os
 import csv
 import calendar
 from functions import *
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 #
 #
@@ -10,19 +11,22 @@ from functions import *
 
 # Search for news articles after given date.
 # Possible formats: YYYY, YYYY-MM, YYYY-MM-DD.
-AFTER = "2018-03-01" 
+AFTER = "" 
 
 # Search for news articles before given date.
 # Possible formats: YYYY, YYYY-MM, YYYY-MM-DD.
-BEFORE = "2018-03-01" 
+BEFORE = "" 
 
 # Search for news articles within given category.
 # Possible categories: 정치, 경제, 사회, 생활문화, 세계, IT/과학, 오피니언, TV.
-CATEGORY = "오피니언"
+CATEGORY = ""
 
 # Provide User-Agent that will appear in every request. (optional)
 # Example: "news-crawler/1.0".
-USER_AGENT = "Mozilla/5.0"
+USER_AGENT = ""
+
+# Provide the number of threads for multithreading to speed up the parsing
+NUM_THREADS = 10
 
 news_urls = []
 article_urls = []
@@ -111,22 +115,17 @@ with open(output_file_path, 'w', encoding='utf-8', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(['Timestamp', 'Category', 'Outlet', 'Headline', 'Content', 'URL'])
 
-    i = 1
-    for url in article_urls:
-        print(f'Parsing article {i} of {len(article_urls)}', end='\r')
-
-        try:
-            soup = fetch_url(url, USER_AGENT)
-
-            timestamp = soup.find('span', {'class': 'media_end_head_info_datestamp_time _ARTICLE_DATE_TIME'})['data-date-time']
-            outlet = soup.find('meta', {'property': 'og:article:author'})['content'].split("|")[0]
-            headline = soup.find('h2',  {'class': 'media_end_head_headline'}).get_text()
-            content = soup.find('article', {'id': 'dic_area'}).get_text()
-            
-            writer.writerow([timestamp, CATEGORY, outlet, headline, content, url])
-        except Exception as e:
-            print(f"Skipped article {i}. Error: {e}. URL: {url}") # Some articles that have a different HTML structure may be skipped. Happens mostly to Sports articles.
-        i += 1
+    with ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
+        future_to_url = {executor.submit(parse_article, url, USER_AGENT, CATEGORY): url for url in article_urls}
+        for i, future in enumerate(as_completed(future_to_url), 1):
+            url = future_to_url[future]
+            try:
+                result = future.result()
+                if result:
+                    writer.writerow(result)
+                print(f'Parsed article {i} of {len(article_urls)}', end='\r')
+            except Exception as e:
+                print(f"Skipped article {i}. Error: {e}. URL: {url}") # Some articles that have a different HTML structure may be skipped. Happens mostly to Sports articles.
 
 print("Finished parsing articles.")
 print(f"Saved to {output_file_path}.")
