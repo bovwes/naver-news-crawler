@@ -18,15 +18,19 @@ AFTER = ""
 BEFORE = "" 
 
 # Search for news articles within given category.
-# Possible categories: 정치, 경제, 사회, 생활문화, 세계, IT/과학, 오피니언, TV.
+# Possible categories: 정치, 경제, 사회, 생활문화, 세계, IT과학, 오피니언, TV.
 CATEGORY = ""
 
 # Provide User-Agent that will appear in every request. (optional)
 # Example: "news-crawler/1.0".
 USER_AGENT = ""
 
-# Provide the number of threads for multithreading to speed up the parsing
+# Provide the number of threads for multithreading to speed up the parsing.
 NUM_THREADS = 10
+
+# Downsamples the number of articles by N. 
+# E.g., with a downsample factor of 2, only half of the articles are parsed.
+DOWNSAMPLE_FACTOR = 1
 
 news_urls = []
 article_urls = []
@@ -90,21 +94,20 @@ for year in range(timeframe['start_year'], timeframe['end_year'] + 1):
 # Extract all articles from the list.
 #
 
-for url in news_urls:
-    soup = fetch_url(url, USER_AGENT)
-    articles = soup.select('.newsflash_body .type06_headline li dl')
-    articles.extend(soup.select('.newsflash_body .type06 li dl'))
-
-    for i in articles:
-        print(f'Found {len(article_urls)} articles...', end='\r')
-        article_urls.append(i.a.get('href'))
-
-print(f'Found {len(article_urls)} articles.')
+with ThreadPoolExecutor() as executor:
+    future_to_url = {executor.submit(fetch_news, url, USER_AGENT): url for url in news_urls}
+    for i, future in enumerate(as_completed(future_to_url)):
+        result = future.result()
+        filtered_result = [res for idx, res in enumerate(result) if idx % DOWNSAMPLE_FACTOR == 0]
+        article_urls.extend(filtered_result)
+        print(f'Found {len(article_urls)} articles.', end='\r')
 
 #
 #
 # Open each article and write relevant fields to csv file.
 #
+
+print(f'\nParsing articles...')
 
 output_dir = f'out'
 os.makedirs(output_dir, exist_ok=True)
@@ -113,7 +116,7 @@ output_file_path = f'{output_dir}/{CATEGORY} {AFTER} - {BEFORE}.csv'
 
 with open(output_file_path, 'w', encoding='utf-8', newline='') as file:
     writer = csv.writer(file)
-    writer.writerow(['Timestamp', 'Category', 'Outlet', 'Headline', 'Content', 'URL'])
+    writer.writerow(['timestamp', 'category', 'outlet', 'headline', 'content', 'url'])
 
     with ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
         future_to_url = {executor.submit(parse_article, url, USER_AGENT, CATEGORY): url for url in article_urls}

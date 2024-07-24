@@ -53,7 +53,7 @@ def get_category_idx(category):
     """ Transforms the given category into a three digit number.
         Naver uses the three digit number in a URL to refer to a category. 
     """ 
-    category_mappings = {'정치': 100, '경제': 101, '사회': 102, '생활문화': 103, '세계': 104, 'IT/과학': 105, '오피니언': 110, 'TV': 115}
+    category_mappings = {'정치': 100, '경제': 101, '사회': 102, '생활문화': 103, '세계': 104, 'IT과학': 105, '오피니언': 110, 'TV': 115}
     
     try:
         category_idx = category_mappings[category]
@@ -85,3 +85,10 @@ def parse_article(url, user_agent, category):
     except Exception as e:
         print(f"Skipped article. Error: {e}. URL: {url}")
         return None
+    
+def fetch_news(url, user_agent):
+    response = requests.get(url, headers={'User-Agent': user_agent})
+    soup = BeautifulSoup(response.text, 'html.parser')
+    articles = soup.select('.newsflash_body .type06_headline li dl')
+    articles.extend(soup.select('.newsflash_body .type06 li dl'))
+    return [article.a.get('href') for article in articles]
