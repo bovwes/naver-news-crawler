@@ -2,6 +2,9 @@
 
 This script is designed to crawl news articles from Naver News within a specified date range and category.
 
+> [!NOTE]
+> Crawlers, scrapers and any kind of automated mean should be used responsibly and in line with Naver's Terms of Service. You can find Naver's TOS in [English](https://policy.naver.com/policy/service_en.html) and [Korean](https://policy.naver.com/policy/service.html).
+
 ## Dependencies
 
 The `BeautifulSoup` and `requests` libraries are required. You can install these libraries using pip:
