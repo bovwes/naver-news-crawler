@@ -79,16 +79,9 @@ def parse_article(url, user_agent, category):
         timestamp = soup.find('span', {'class': 'media_end_head_info_datestamp_time _ARTICLE_DATE_TIME'})['data-date-time']
         outlet = soup.find('meta', {'property': 'og:article:author'})['content'].split("|")[0]
         headline = soup.find('h2',  {'class': 'media_end_head_headline'}).get_text()
-        content = soup.find('article', {'id': 'dic_area'})
+        content = soup.find('article', {'id': 'dic_area'}).get_text()
 
-        if content:
-            for tag in content.find_all(['div', 'span', 'em', 'strong'], {'class': ['media_end_summary', 'img_desc', 'end_photo_org']}):
-                tag.decompose() # Remove the article tag line and image tag lines.
-            main_content = content.get_text().strip()
-        else:
-            main_content = None
-
-        return [timestamp, category, outlet, headline, main_content, url]
+        return [timestamp, category, outlet, headline, content, url]
     except Exception as e:
         print(f"Skipped article. Error: {e}. URL: {url}")
         return None
